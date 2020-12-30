@@ -10,6 +10,10 @@ nhash = 'analyze'
 
 app = Flask(__name__)
 
+@app.route("/")
+def PrintHello():
+    return "HELLO"
+
 @app.route("/"+str(nhash), methods=['GET', 'POST'])
 
 def create_row_in_gs():
