@@ -1,4 +1,5 @@
 from flask import Flask, jsonify,request,make_response,url_for,redirect
+from flask_cors import CORS
 from json import dumps
 from requests import post
 import pickle
@@ -9,6 +10,7 @@ from sklearn.linear_model import Perceptron
 nhash = 'analyze'
 
 app = Flask(__name__)
+CORS(app)
 
 @app.route("/")
 def PrintHello():
