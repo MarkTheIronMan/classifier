@@ -16,15 +16,19 @@ def PrintHello():
 
 @app.route("/"+str(nhash), methods=['GET', 'POST'])
 
-def create_row_in_gs():
+def process_request():
     if request.method == 'GET':
-        return "Hello, Flask!"
+        return "Wrong type of request!"
     if request.method == 'POST':
         with open('model.pkl', 'rb') as f:
             model = pickle.load(f)
         url = request.json['url']
         content = Parse(url)
         if not content.isdigit():
-            resp = (model.predict(FormRequestToModel(content)))
-            return str(resp[0])
-        return content
+            result = model.predict(FormRequestToModel(content))
+            resp = make_response(str(result[0]))
+            resp.headers['Access-Control-Allow-Origin']='*'
+            return resp
+        resp = make_response('205')
+        resp.headers['Access-Control-Allow-Origin']='*'
+        return resp
