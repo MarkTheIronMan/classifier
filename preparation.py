@@ -2,24 +2,24 @@
 
 SIZE_MAX = 3200000
 
-from service import FindAll, LoadFromJson, LoadFromTxt
+from service import find_all, load_from_json, load_from_txt
 
-lbad = LoadFromJson('arbitrage_words')
-lgood = LoadFromJson('business_words')
-stopwords = LoadFromTxt('stopwords.txt')
+lbad = load_from_json('arbitrage_words')
+lgood = load_from_json('business_words')
+stopwords = load_from_txt('stopwords.txt')
 
-def GetPageSize(string):
+def get_page_size(string):
     return len(string)
 
-def GetSizeNorm(string):
+def get_norm_size(string):
     return round(GetPageSize(string)/SIZE_MAX, 3)
 
-def DeleteSpecialSymbols(string):
+def delete_special_symbols(string):
     f = [string]
     f = [x.replace('\n','').replace('&amp;','').replace('|','').replace('-','').replace('?','').replace('\t','').replace('&gt','') for x in f]
     return f[0]
 
-def FindTitle(string):
+def get_title(string):
     try:
         start = string.find('<title>')
         end = string.find('</title>')
@@ -27,9 +27,9 @@ def FindTitle(string):
         return ''
     if (start == -1) or (end == -1):
         return ''
-    return DeleteSpecialSymbols(string[start+7:end])
+    return delete_special_symbols(string[start+7:end])
 
-def FindH1(string):
+def find_h1(string):
     try:
         start = string.find('<h1')
         if start != -1:
@@ -40,9 +40,9 @@ def FindH1(string):
         return ''
     if (start == -1) or (end == -1):
         return ''
-    return DeleteSpecialSymbols(temp[brack+1:end])
+    return delete_special_symbols(temp[brack+1:end])
 
-def FindH2(string):
+def find_h2(string):
     try:
         start = string.find('<h2')
         if start != -1:
@@ -53,9 +53,9 @@ def FindH2(string):
         return ''
     if (start == -1) or (end == -1):
         return ''
-    return DeleteSpecialSymbols(temp[brack+1:end])
+    return delete_special_symbols(temp[brack+1:end])
 
-def FindH3(string):
+def find_h3(string):
     try:
         start = string.find('<h3')
         if start != -1:
@@ -66,12 +66,12 @@ def FindH3(string):
         return ''
     if (start == -1) or (end == -1):
         return ''
-    return DeleteSpecialSymbols(temp[brack+1:end])
+    return delete_special_symbols(temp[brack+1:end])
 
-def ClearBrackets(string):
+def clear_brackets(string):
     if type(string) is not str:
         return ''
-    isBracketExists = True
+    is_bracket_exists = True
     while isBracketExists:
         start = string.find('<')
         end = string.find('>')
@@ -79,22 +79,22 @@ def ClearBrackets(string):
             string = string[:start] + string[end + 1:]
             continue
         if start == -1 or end == -1:
-            isBracketExists = False
+            is_bracket_exists = False
         if end < start:
             return string
-    if not isBracketExists:
+    if not is_bracket_exists:
         return string
 
-def FindHeaders(string):
-    return FindH1(string) + FindH3(string) + FindH3(string)
+def find_headers(string):
+    return find_h1(string) + find_h2(string) + find_h3(string)
 
-def FormCloudOfWords(string):
-    cloud = FindTitle(string)
-    header = FindHeaders(string)
+def form_cloud_of_words(string):
+    cloud = find_title(string)
+    header = find_headers(string)
     cloud += header
-    return ClearBrackets(cloud.lower())
+    return clear_brackets(cloud.lower())
 
-def CountWordVal(cloud, lgood, lbad):
+def count_word_val(cloud, lgood, lbad):
     val = 0.5
     add_val = 0
     cloud = cloud.split()
@@ -102,50 +102,49 @@ def CountWordVal(cloud, lgood, lbad):
         if word in stopwords:
             continue
         try:
-            goodval = lgood[word]
+            good_val = lgood[word]
         except KeyError:
-            goodval = 1
+            good_val = 1
         try:
-            badval = lbad[word]
+            bad_val = lbad[word]
         except KeyError:
-            badval = 1
-        if goodval >= badval:
-            add_val += (goodval - badval)/300
+            bad_val = 1
+        if good_val >= ba_val:
+            add_val += (good_val - bad_val)/300
         else:
-            add_val += (goodval - badval)/190
+            add_val += (good_val - bad_val)/190
     if len(cloud) != 0:
-        val += add_val
-        
+        val += add_val    
     return val
 
-def GetTel(string): #add existence of tel
+def is_tel(string): #add existence of tel
     if string.find("tel:") != -1:
         return 1
     return 0
 
-def GetAddress(string): #add existence of address
+def is_address(string): #add existence of address
     if string.find("address") != -1:
         return 1
     return 0
 
-def GetInputBox(string): #add existence of Input type
+def is_inputbox(string): #add existence of Input type
     if string.find("input type:") != -1:
         return 1
     return 0
 
-def GetADS(string): #add existence of ad blocks
+def is_ads(string): #add existence of ad blocks by keyword "adsby"
     if string.find("adsby") != -1:
         return 1
     return 0
 
-def GetSC(string): #added count of word "search" / lenght of document
-    mlist = list(FindAll('search', string))
+def get_sc(string): #added count of word "search" / lenght of document
+    mlist = list(find_all('search', string))
     return round(len(mlist) * 60 / len(string), 3)
 
-def FormRequestToModel(string): # form 
+def form_query_to_model(string): # form 
     if not string:
         return '203'
-    return [[CountWordVal(FormCloudOfWords(string), lgood, lbad), 
-            GetSizeNorm(string), GetTel(string), 
-            GetAddress(string), GetInputBox(string), 
-            GetADS(string), GetSC(string)]] 
+    return [[count_word_val(form_cloud_of_words(string), lgood, lbad), 
+            get_size_norm(string), is_tel(string), 
+            is_address(string), is_inputbox(string), 
+            is_ads(string), get_sc(string)]] 
