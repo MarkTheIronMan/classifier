@@ -85,12 +85,12 @@ def clear_brackets(string):
     if not is_bracket_exists:
         return string
 
-def find_headers(string):
+def sum_headers(string):
     return find_h1(string) + find_h2(string) + find_h3(string)
 
 def form_cloud_of_words(string):
     cloud = find_title(string)
-    header = find_headers(string)
+    header = sum_headers(string)
     cloud += header
     return clear_brackets(cloud.lower())
 
@@ -143,7 +143,7 @@ def get_sc(string): #added count of word "search" / lenght of document
 
 def form_query_to_model(string): # form 
     if not string:
-        return '203'
+        return 203
     return [[count_word_val(form_cloud_of_words(string), lgood, lbad), 
             get_size_norm(string), is_tel(string), 
             is_address(string), is_inputbox(string), 
