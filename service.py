@@ -1,8 +1,8 @@
 ERRORS = {
-    '200': 'OK',
-    '201': 'Cannot load page',
-    '202': 'Invalid URL',
-    '203': 'No content from parsing'
+    200: 'OK',
+    201: 'Cannot load page',
+    202: 'Invalid URL',
+    203: 'No content from parsing'
     }
 
 
