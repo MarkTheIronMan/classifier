@@ -1,11 +1,11 @@
-## ['wordval', 'size_norm', 'tel', 'address', 'it', 'ads', 'sc'] - list of features
 
+## ['description','tel', 'address', 'ftl', 'sc', 'ads', 'cart', 'sign', 'login', 'ar2k', 'ln20k'] + word cloud
+## 
 SIZE_MAX = 3200000
 
 from service import find_all, load_from_json, load_from_txt
+from req import get_ar_au
 
-lbad = load_from_json('arbitrage_words')
-lgood = load_from_json('business_words')
 stopwords = load_from_txt('stopwords.txt')
 
 def get_page_size(string):
@@ -14,10 +14,47 @@ def get_page_size(string):
 def get_norm_size(string):
     return round(GetPageSize(string)/SIZE_MAX, 3)
 
-def delete_special_symbols(string):
-    f = [string]
-    f = [x.replace('\n','').replace('&amp;','').replace('|','').replace('-','').replace('?','').replace('\t','').replace('&gt','') for x in f]
-    return f[0]
+def is_description(string):
+    try:
+        descriptionposition = string.find('description')
+        if descriptionposition > 0:
+            return 1
+        return 0
+    except AttributeError:
+        return 0
+
+def is_ftl(string):
+    try:
+        if string.find('featured</h4>') != -1 and string.find('trending</h4>') != -1 and string.find('latest</h4>') != -1 or string.find('no more posts') != -1:
+            return 1
+        return 0
+    except AttributeError:
+        return 0
+
+def is_cart(string):
+    try:
+        if string.find('cart<') != -1 or string.find('basket<') != -1:
+            return 1
+        return 0
+    except AttributeError:
+        return 0
+
+def is_signin(string):
+    try:
+        if string.find('sign in') != -1:
+            return 1
+        return 0
+    except AttributeError:
+        return 0
+
+def is_login(string):
+    try:
+        if string.find('log in') != -1 or string.find('login') != -1:
+            return 1
+        return 0
+    except AttributeError:
+        return 0
+
 
 def get_title(string):
     try:
@@ -29,44 +66,18 @@ def get_title(string):
         return ''
     return delete_special_symbols(string[start+7:end])
 
-def find_h1(string):
+def get_title_h(string, num): #find titles h1, h2, h3
     try:
-        start = string.find('<h1')
+        start = string.find('<h' + str(num))
         if start != -1:
-            temp = string[start+3:start + 500]
+            temp = string[start+3 : start + 500]
             brack = temp.find('>')
-            end = temp.find('</h1>')
+            end = temp.find('</h' + str(num) + '>')
     except AttributeError:
         return ''
     if (start == -1) or (end == -1):
         return ''
-    return delete_special_symbols(temp[brack+1:end])
-
-def find_h2(string):
-    try:
-        start = string.find('<h2')
-        if start != -1:
-            temp = string[start+3:start + 500]
-            brack = temp.find('>')
-            end = temp.find('</h2>')
-    except AttributeError:
-        return ''
-    if (start == -1) or (end == -1):
-        return ''
-    return delete_special_symbols(temp[brack+1:end])
-
-def find_h3(string):
-    try:
-        start = string.find('<h3')
-        if start != -1:
-            temp = string[start+3:start + 500]
-            brack = temp.find('>')
-            end = temp.find('</h3>')
-    except AttributeError:
-        return ''
-    if (start == -1) or (end == -1):
-        return ''
-    return delete_special_symbols(temp[brack+1:end])
+    return delete_special_symbols(temp[brack + 1 : end])
 
 def clear_brackets(string):
     if type(string) is not str:
@@ -86,36 +97,15 @@ def clear_brackets(string):
         return string
 
 def sum_headers(string):
-    return find_h1(string) + find_h2(string) + find_h3(string)
+    return get_title_h(string, 1) + get_title_h(string, 2) + get_title_h(string, 3)
 
 def form_cloud_of_words(string):
+    if type(string) is not string:
+        return 1
     cloud = find_title(string)
     header = sum_headers(string)
     cloud += header
     return clear_brackets(cloud.lower())
-
-def count_word_val(cloud, lgood, lbad):
-    val = 0.5
-    add_val = 0
-    cloud = cloud.split()
-    for word in cloud:
-        if word in stopwords:
-            continue
-        try:
-            good_val = lgood[word]
-        except KeyError:
-            good_val = 1
-        try:
-            bad_val = lbad[word]
-        except KeyError:
-            bad_val = 1
-        if good_val >= ba_val:
-            add_val += (good_val - bad_val)/300
-        else:
-            add_val += (good_val - bad_val)/190
-    if len(cloud) != 0:
-        val += add_val    
-    return val
 
 def is_tel(string): #add existence of tel
     if string.find("tel:") != -1:
@@ -141,10 +131,15 @@ def get_sc(string): #added count of word "search" / lenght of document
     mlist = list(find_all('search', string))
     return round(len(mlist) * 60 / len(string), 3)
 
-def form_query_to_model(string): # form 
+
+def form_query_to_model(url, string): # form ['description','tel', 'address', 
+                                 #       'ftl', 'sc', 'ads', 'cart', 
+                                 #       'sign', 'login', 'ar2k', 'ln20k'] + word cloud
     if not string:
         return 203
-    return [[count_word_val(form_cloud_of_words(string), lgood, lbad), 
-            get_size_norm(string), is_tel(string), 
-            is_address(string), is_inputbox(string), 
-            is_ads(string), get_sc(string)]] 
+    alexa_aboutus_ranks = get_ar_au(string)
+    return [[is_description(string), is_tel(string), is_address(string), 
+            is_ftl(string), get_sc(string), is_ads(string), is_cart(string),
+            is_signin(string), is_login(string), alexa_aboutus_ranks[0], alexa_aboutus_ranks[1],
+            form_cloud_of_words(string)
+            ]]

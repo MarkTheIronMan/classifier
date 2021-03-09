@@ -13,7 +13,6 @@ import pickle
 def save_to_json(dictionary, filename): # serialize data into file:
     json.dump(dictionary, open(filename + ".json", 'w'))
 
-
 def load_from_json(filename): # read data from file:
     return json.load(open(filename + ".json"))
 
@@ -39,3 +38,11 @@ def get_error_encode(num):
         return res
     except Exception:
         return 'Unknown code'
+
+def get_string_after_key(string, key):
+    return string[string.find(key)+len(key):]
+
+def delete_special_symbols(string):
+    f = [string]
+    f = [x.replace('\n','').replace('&amp;','').replace('|','').replace('-','').replace('?','').replace('\t','').replace('&gt','') for x in f]
+    return f[0]

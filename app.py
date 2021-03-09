@@ -21,6 +21,6 @@ def create_row_in_gs():
         url = request.json['url']
         content = parse(url)
         if not content.isdigit():
-            resp = (model.predict(form_query_to_model(content)))
+            resp = (model.predict(form_query_to_model(url, content)))
             return str(resp[0])
         return get_error_encode(content)
