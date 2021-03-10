@@ -13,7 +13,6 @@ import pickle
 def SaveToJson(dictionary, filename): # serialize data into file:
     json.dump(dictionary, open(filename + ".json", 'w'))
 
-
 def LoadFromJson(filename): # read data from file:
     return json.load(open(filename + ".json"))
 
